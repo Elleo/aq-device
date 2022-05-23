@@ -6,7 +6,9 @@ Python application for logging data from ESDK hardware
 '''
 
 import asyncio
+import requests
 import websockets
+import random
 import json
 import time
 import threading
@@ -27,6 +29,13 @@ debugData = {}
 WEBSOCKET_UPDATE_INTERVAL = 5
 CSV_UPDATE_INTERVAL = 30
 PROMETHEUS_MIN_UPDATE_INTERVAL = 120
+
+HIGH_VOC_SENTENCES = ["The air is smelly", "The world smells bad", "This stinks", "The sky smells bad"]
+HIGH_HUMIDITY_SENTENCES = ["It's very moist", "Wet wet wet", "Soggy air", "The air is damp"]
+LOW_HUMIDITY_SENTENCES = ["It's very dry", "Dry air"]
+HIGH_PM_SENTENCES = ["The air quality is poor", "The air is polluted", "The environment is polluted"]
+HIGH_CO2_SENTENCES = ["The air quality is poor", "The air is suffocating"]
+NICE_SENTENCES = ["The sky is beautiful", "The air is great", "The world is nice", "The environment is lovely", "The environment is great", "Nature is happy", "The air is fresh"]
 
 async def websocketPush(websocket, path):
     logger.debug("Websocket connection from {}".format(websocket.remote_address))
@@ -84,6 +93,12 @@ def main():
         daemon=True)
     sensorsUpdateThreadHandle.name = "sensorsUpdateThread"
     sensorsUpdateThreadHandle.start()
+
+    imageUpdateThreadHandle = threading.Thread(target=imageUpdateThread, \
+        args=(sensorData, ), \
+        daemon=True)
+    imageUpdateThreadHandle.name = "imageUpdateThread"
+    imageUpdateThreadHandle.start()
 
     global mqtt
     mqttConfig = getMqttConfig()
@@ -160,6 +175,41 @@ def sensorsUpdateThread(sensorDataHandle):
         debugData.update(mainboard.getGPSStatus())
 
         time.sleep(1)
+
+def imageUpdateThread(sensorData):
+    logger.debug("Start image update thread")
+    while True:
+        co2 = 0
+        voc = 0
+        pm = 0
+        humidity = 0
+        if 'thv' in sensorData:
+            voc = sensorData['thv']['vocIndex']
+            humidity = sensorData['thv']['humidity']
+        if 'pm' in sensorData:
+            pm = sensorData['pm']['pm1.0'] + sensorData['pm']['pm2.5'] + sensorData['pm']['pm4.0'] + sensorData['pm']['pm10']
+        if 'co2' in sensorData:
+            co2 = sensorData['co2']['co2']
+        sentences = []
+        if voc > 250:
+            sentences += HIGH_VOC_SENTENCES
+        if humidity > 80:
+            sentences += HIGH_HUMIDITY_SENTENCES
+        if humidity < 20 and humidity != 0:
+            sentences += LOW_HUMIDITY_SENTENCES
+        if pm > 100:
+            sentences += HIGH_PM_SENTENCES
+        if co2 > 2000:
+            sentences += HIGH_CO2_SENTENCES
+        if len(sentences) == 0:
+            sentences += NICE_SENTENCES
+        sentence = random.choice(sentences)
+        try:
+            requests.get("http://airquality.mikeasoft.com/%s" % sentence)
+        except:
+            time.sleep(120)
+            requests.get("http://airquality.mikeasoft.com/%s" % sentence)
+        time.sleep(3600)
 
 def mqttUpdateThread(sensorData):
     logger.debug("Started MQTT thread")

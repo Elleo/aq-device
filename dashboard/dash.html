@@ -40,9 +40,37 @@
             border-radius: 10px;
         }
 
+        h5 {
+            font-size: 11pt;
+            font-weight: bold;
+            margin-bottom: 0;
+            margin-top: 0;
+        }
+
+        h1 {
+            font-size: 11pt;
+            margin-bottom: 0;
+            margin-top: 5px;
+        }
+
+        p {
+            margin-bottom: 3px;
+        }
+
         #summary {
             width: 100%;
             height: 100%;
+        }
+
+        #art {
+            font-size: 10pt;
+            width: 100%;
+            height: 39%;
+        }
+
+        #stats {
+            width: 100%;
+            height: 61%;
         }
 
         #temperatureChart, #VOCChart, #CO2Chart, #PMChart {
@@ -126,30 +154,49 @@
 
             updateCharts(tempData, humidityData, VOCData, CO2Data, PM1Data, PM25Data, PM4Data, PM10Data);
         }
+
+        function vote(decision) {
+            $("#buttons").fadeOut(250, function() {
+                $("#thankyou").fadeIn(1000, function() {
+                    $("#thankyou").fadeOut(5000, function() {
+                        $("#buttons").fadeIn(250);
+                    })
+                });
+            });
+        }
     </script>
 
     <title>Websocket Data Test</title>
 </head>
 <body>
     <div id='summary'>
-        <div onclick="$('#summary').hide(0); showTempChart(tempData, humidityData);" class="metric" id="tempRhMetric">
-            <h5>T & RH</h5>
-            <h1><span id="tempText"></span><small>°C</small></h1>
-            <h1><span id="humidityText"></span><small>%</small></h1>
+        <div id='art'>
+            <p style='text-align: center;'>This image required roughly 10 grams of CO2e to generate, that's similar to driving 40 metres in a car. Do you think this image was worth it?</p>
+
+            <div id='buttons' style='text-align: center;'><button onclick='vote("yes")'>Yes</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button onclick='vote("no")'>No</button></div>
+            <div id='thankyou' style='display: none; margin-top: 7px; text-align: center;'>Thank you for voting!</div>
         </div>
-        <div onclick="$('#summary').hide(0); showVOCChart(VOCData);" class="metric" id="vocMetric">
-            <h5>VOC</h5>
-            <h1 id="vocText"></h1>
-        </div>
-        <div onclick="$('#summary').hide(0); showCO2Chart(CO2Data);" class="metric" id="co2Metric">
-            <h5>CO<sub>2</sub></h5>
-            <h1><span id="co2Text"></span><small>ppm</small></h1>
-        </div>
-        <div onclick="$('#summary').hide(0); showPMChart(PM1Data, PM25Data, PM4Data, PM10Data);" class="metric" id="pmMetric">
-            <h5><small>PM1.0</small> <span id="pm1Text"></span></h5>
-            <h5><small>PM2.5</small> <span id="pm25Text"></span></h5>
-            <h5><small>PM4.0</small> <span id="pm4Text"></span></h5>
-            <h5><small>PM10</small> <span id="pm10Text"></span></h5>
+
+        <div id='stats'>
+            <div onclick="$('#summary').hide(0); showTempChart(tempData, humidityData);" class="metric" id="tempRhMetric">
+                <h5>T & RH</h5>
+                <h1><span id="tempText"></span><small>°C</small></h1>
+                <h1><span id="humidityText"></span><small>%</small></h1>
+            </div>
+            <div onclick="$('#summary').hide(0); showVOCChart(VOCData);" class="metric" id="vocMetric">
+                <h5>VOC</h5>
+                <h1 id="vocText"></h1>
+            </div>
+            <div onclick="$('#summary').hide(0); showCO2Chart(CO2Data);" class="metric" id="co2Metric">
+                <h5>CO<sub>2</sub></h5>
+                <h1><span id="co2Text"></span><small>ppm</small></h1>
+            </div>
+            <div onclick="$('#summary').hide(0); showPMChart(PM1Data, PM25Data, PM4Data, PM10Data);" class="metric" id="pmMetric">
+                <h5><small>PM1.0 <span id="pm1Text"></span></small></h5>
+                <h5><small>PM2.5 <span id="pm25Text"></span></small></h5>
+                <h5><small>PM4.0 <span id="pm4Text"></span></small></h5>
+                <h5><small>PM10 <span id="pm10Text"></span></small></h5>
+            </div>
         </div>
     </div>
     <canvas id='temperatureChart' width='320' height='240' onclick="$('#temperatureChart').hide(); tempChart.destroy(); $('#summary').fadeIn(250);"></canvas>
